@@ -4,10 +4,16 @@
  <?php include('header.php'); 
   session_start();
   // Vérifiez si l'utilisateur est connecté, sinon redirigez-le vers la page de connexion
-  if(!isset($_SESSION["id_salarie"])){
-    header("Location: index.php");
+    if(!isset($_SESSION["id_salarie"]) || !isset($_SESSION["responsable"])){
+        header("Location: index.php");
     exit(); 
-  }
+    }
+    if($_SESSION["responsable"] != 1 ) {
+        echo '<div class="alert m-5 alert-danger" role="alert">
+        Vous n\'êtes pas autorisé
+        </div>';
+    exit(); 
+    }
 ?>
 	
 <body>
@@ -34,39 +40,41 @@
         $stmt = $pdo->prepare("SELECT salarie.nom_salarie, salarie.prenom_salarie, mission.debut, mission.fin, commune.comNom, commune.comCp, mission.id_mission, mission.valid FROM salarie, mission, commune WHERE salarie.id_responsable = :id_salarie AND mission.id_salarie = salarie.id_salarie AND mission.id_commune = commune.comId ORDER BY mission.debut ");
         $stmt->execute(array(':id_salarie' => $id_salarie));
     
-        
+        echo ('<table class="table table-striped text-center table-responsive{-sm|-md|-lg|-xl} rounded-2">
+        <thead>
+            <tr>
+                <th>Nom du salarié</th>
+                <th>Prénom du salarié</th>
+                <th>Début de la mission</th>
+                <th>Fin de la mission</th>
+                <th>Lieu de la mission</th>
+                <th>Validation</th>
+            </tr>
+        </thead>
+        <tbody>');
      
-        while ($ligne = $stmt->fetch()) {
-            echo ('<table id="tableValid" class="table table-striped table-responsive{-sm|-md|-lg|-xl}">
-            <tead class="">
-                <td>Nom du salarié</td>
-                <td>Prenom du salarié</td>
-                <td>Debut de la Mission</td>
-                <td>Fin de la Mission</td>
-                <td>Lieu de la Mission</td>
-                <td>Validation</td>
-            </thead>
-						<tbody>');
-                        foreach ($stmt->fetchAll() as $ligne) {
+        while ($row = $stmt->fetch()) {
+      
+                        
 
-                            if ($ligne['valid'] == 0) {
-                                $validation = '<td>
-                                <form action="updateValid.php" method="post">
-                                <button value="'.$ligne["id_mission"].'" name="valider" type="submit" class="btn btn-sm btn-outline-dark">Valider</button>
-                                </form>';
-                            }
-                            else {
-                                $validation = '<td>Validée';
-                            }
+            if ($row['valid'] == 0) {
+                $validation = '<td>
+                <form action="updateValid.php" method="post">
+                <button value="'.$row["id_mission"].'" name="valider" type="submit" class="btn btn-sm btn-outline-dark">Valider</button>
+                </form>';
+            }
+            else {
+                $validation = '<td>Validée';
+            }
         
-                            echo ('<tr><td>' . $ligne["nom_salarie"] . '</td>
-                            <td>' . $ligne["prenom_salarie"] . '</td>
-                            <td>' . $ligne["debut"] . '</td>
-                            <td>' . $ligne["fin"] . '</td>
-                            <td>' . $ligne["comNom"] . ' ('. $ligne["comCp"] .')</td>'.$validation.'</tr>');
-                        }
-                        echo ('</tbody></table>');
-				};
+            echo ('<tr><td>' . $row["nom_salarie"] . '</td>
+            <td>' . $row["prenom_salarie"] . '</td>
+            <td>' . $row["debut"] . '</td>
+            <td>' . $row["fin"] . '</td>
+            <td>' . $row["comNom"] . ' ('. $row["comCp"] .')</td>'.$validation.'</tr>');
+        }
+        echo ('</tbody></table>');
+				
         ?>
 
         
@@ -77,4 +85,4 @@
     <?php include('footer.php'); ?>
        
 
-    <!--  SELECT depart.ComNom as nomComDepart, arrive.ComNom as nomComArrive, trajet.distance, trajet.id_arrive_com , trajet.id_debut_com FROM trajet, commune as depart, commune as arrive WHERE trajet.id_debut_com = depart.comId AND trajet.id_arrive_com = arrive.comId;  -->
+    

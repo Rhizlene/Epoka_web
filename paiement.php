@@ -1,11 +1,25 @@
 <!doctype html>
 <html lang="fr">
  <title>Paiement des Frais</title>
- <?php include('header.php'); ?>
+ <?php include('header.php'); 
+  // Initialiser la session
+  session_start();
+  // Vérifiez si l'utilisateur est connecté, sinon redirigez-le vers la page de connexion
+  if(!isset($_SESSION["id_salarie"]) || !isset($_SESSION["comptable"])){
+    header("Location: index.php");
+    exit(); 
+    }
+    if($_SESSION["comptable"] != 1 ) {
+        echo '<div class="alert m-5 alert-danger" role="alert">
+        Vous n\'êtes pas autorisé
+        </div>';
+    exit(); 
+    }
+?>
 	
  <body>
  <div class="container my-5">
-        <h3 class="my-3">Validation des missions de vos subordonnés</h3>
+        <h3 class="my-3">Paiement des missions de vos subordonnés</h3>
 
         <?php
         $host = 'localhost';
@@ -24,43 +38,61 @@
 
         $id_salarie = $_SESSION['id_salarie'];
 
-        $stmt = $pdo->prepare("SELECT salarie.nom_salarie, salarie.prenom_salarie, mission.debut, mission.fin, commune.comNom, commune.comCp, mission.id_mission, mission.valid FROM salarie, mission, commune WHERE salarie.id_responsable = :id_salarie AND mission.id_salarie = salarie.id_salarie AND mission.id_commune = commune.comId ORDER BY mission.debut ");
+        $stmt = $pdo->prepare("SELECT salarie.nom_salarie, salarie.prenom_salarie, mission.debut, mission.fin, commune.comNom, commune.comCp, mission.id_mission, mission.payer FROM salarie, mission, commune WHERE salarie.id_responsable = :id_salarie AND mission.id_salarie = salarie.id_salarie AND mission.id_commune = commune.comId AND mission.valid = 1 ORDER BY mission.debut ");
         $stmt->execute(array(':id_salarie' => $id_salarie));
+
+        $calculMontant = 'SELECT (((DATEDIFF(mission.fin, mission.debut) + 1) * parametre.forfait_journalier) + (ROUND(trajet.distance * parametre.idem_kilometre)*2)) as montant FROM mission JOIN trajet ON (trajet.id_arrive_com = mission.id_commune OR trajet.id_debut_com = mission.id_commune) JOIN salarie ON (salarie.id_agence = trajet.id_arrive_com OR salarie.id_agence = trajet.id_debut_com) AND salarie.id_salarie = mission.id_salarie JOIN parametre WHERE mission.id_mission = :idMis AND (trajet.id_debut_com = salarie.id_agence OR trajet.id_arrive_com = salarie.id_agence)';
     
         
-     
-        while ($ligne = $stmt->fetch()) {
-            echo ('<table id="tableValid" class="table table-striped table-responsive{-sm|-md|-lg|-xl}">
-            <tead class="">
-                <td>Nom du salarié</td>
-                <td>Prenom du salarié</td>
-                <td>Debut de la Mission</td>
-                <td>Fin de la Mission</td>
-                <td>Lieu de la Mission</td>
-                <td>Validation</td>
-            </thead>
-						<tbody>');
-                        foreach ($stmt->fetchAll() as $ligne) {
-
-                            if ($ligne['valid'] == 0) {
-                                $validation = '<td>
-                                <form action="updateValid.php" method="post">
-                                <button value="'.$ligne["id_mission"].'" name="valider" type="submit" class="btn btn-sm btn-outline-dark">Valider</button>
-                                </form>';
-                            }
-                            else {
-                                $validation = '<td>Validée';
-                            }
+        echo ('<table class="table table-striped text-center table-responsive{-sm|-md|-lg|-xl}">
+        <thead>
+            <tr>
+                <th>Nom du salarié</th>
+                <th>Prénom du salarié</th>
+                <th>Début de la mission</th>
+                <th>Fin de la mission</th>
+                <th>Lieu de la mission</th>
+                <th>Montant</th>
+                <th>Remboursement</th>
+            </tr>
+        </thead>
+        <tbody>');
         
-                            echo ('<tr><td>' . $ligne["nom_salarie"] . '</td>
-                            <td>' . $ligne["prenom_salarie"] . '</td>
-                            <td>' . $ligne["debut"] . '</td>
-                            <td>' . $ligne["fin"] . '</td>
-                            <td>' . $ligne["comNom"] . ' ('. $ligne["comCp"] .')</td>'.$validation.'</tr>');
-                        }
-                        echo ('</tbody></table>');
-				};
+        while ($row = $stmt->fetch()) {
+        
+            
+            $reqMontant = $pdo->prepare($calculMontant);
+            $reqMontant->bindParam(':idMis', $row['id_mission'], PDO::PARAM_INT);
+            $reqMontant->execute();
+            $montant = $reqMontant->fetch();
+            
+            if ($row['payer'] == 0) {
+                $payer = '<td>
+                    <form action="updatePayer.php" method="post">
+                        <button value="'.$row["id_mission"].'" name="payer" type="submit" class="btn btn-sm btn-outline-dark">Rembourser</button>
+                    </form>
+                </td>';
+            } else {
+                $payer = '<td>Remboursée</td>';
+            }
+        
+            echo ('<tr><td>' . $row["nom_salarie"] . '</td>
+                <td>' . $row["prenom_salarie"] . '</td>
+                <td>' . $row["debut"] . '</td>
+                <td>' . $row["fin"] . '</td>
+                <td>' . $row["comNom"] . ' ('. $row["comCp"] .')' . '</td>');
+        
+                // var_dump($montant); die;
+            if ($montant) {
+                echo '<td>' . $montant[0] . ' €</td>' . $payer . '</tr>';
+            } else {
+                echo '<td>Distance non définie</td><td></td></tr>';
+            }
+        }
+        
+        echo ('</tbody></table>');
         ?>
+    
 
         
         </table>
@@ -70,5 +102,3 @@
 	
     <?php include('footer.php'); ?>
        
-
-    <!-- SELECT salarie.nom_salarie, salarie.prenom_salarie, mission.debut, mission.fin, commune.comNom, commune.comCp, trajet.distance, trajet.id_arrive_com , trajet.id_debut_com, (parametre.forfait_journalier * trajet.distance) as montant, mission.payer FROM salarie LEFT JOIN mission ON salarie.id_salarie = mission.id_salarie LEFT JOIN commune ON mission.id_commune = commune.comId LEFT JOIN trajet ON trajet.id_arrive_com = mission.id_commune AND trajet.id_debut_com = salarie.id_agence LEFT JOIN parametre ON trajet.id_arrive_com = parametre.idem_kilometre WHERE salarie.id_responsable = salarie.id_salarie ORDER BY mission.debut;  -->

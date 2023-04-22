@@ -9,7 +9,7 @@
   
   
     <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e3f2fd;">
-    <a class="navbar-brand mx-4" href="#">Epoka</a>
+    <a class="navbar-brand mx-4" href="accueil.php">Epoka</a>
   
     <div class="collapse navbar-collapse justify-content-between" id="navbarText">
       <ul class="navbar-nav mr-auto">
