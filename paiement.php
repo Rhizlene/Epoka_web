@@ -19,7 +19,7 @@
 	
  <body>
  <div class="container my-5">
-        <h3 class="my-3">Paiement des missions de vos subordonnés</h3>
+        <h3 class="my-3">Paiement des missions</h3>
 
         <?php
         $host = 'localhost';
@@ -38,8 +38,8 @@
 
         $id_salarie = $_SESSION['id_salarie'];
 
-        $stmt = $pdo->prepare("SELECT salarie.nom_salarie, salarie.prenom_salarie, mission.debut, mission.fin, commune.comNom, commune.comCp, mission.id_mission, mission.payer FROM salarie, mission, commune WHERE salarie.id_responsable = :id_salarie AND mission.id_salarie = salarie.id_salarie AND mission.id_commune = commune.comId AND mission.valid = 1 ORDER BY mission.debut ");
-        $stmt->execute(array(':id_salarie' => $id_salarie));
+        $stmt = $pdo->prepare("SELECT salarie.nom_salarie, salarie.prenom_salarie, mission.debut, mission.fin, commune.comNom, commune.comCp, mission.id_mission, mission.payer FROM salarie, mission, commune WHERE mission.id_salarie = salarie.id_salarie AND mission.id_commune = commune.comId AND mission.valid = 1 ORDER BY mission.debut ");
+        $stmt->execute();
 
         $calculMontant = 'SELECT (((DATEDIFF(mission.fin, mission.debut) + 1) * parametre.forfait_journalier) + (ROUND(trajet.distance * parametre.idem_kilometre)*2)) as montant FROM mission JOIN trajet ON (trajet.id_arrive_com = mission.id_commune OR trajet.id_debut_com = mission.id_commune) JOIN salarie ON (salarie.id_agence = trajet.id_arrive_com OR salarie.id_agence = trajet.id_debut_com) AND salarie.id_salarie = mission.id_salarie JOIN parametre WHERE mission.id_mission = :idMis AND (trajet.id_debut_com = salarie.id_agence OR trajet.id_arrive_com = salarie.id_agence)';
     

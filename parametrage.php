@@ -15,7 +15,7 @@
         </div>';
     exit(); 
     }
-   if($_SESSION["responsable"] != 1 ) {
+   if($_SESSION["responsable"] == 1 ) {
       echo '<div class="alert m-5 alert-danger" role="alert">
       Vous n\'êtes pas autorisé
       </div>';
@@ -67,13 +67,31 @@
             <h3 class="my-3">Ajouter une distance</h3>
             <form name="indemnité" method="post" action="insertTrajet.php">
                <div class="form-outline mb-4">
-                  <label class="form-label" for="commune1" style="font-size:smaller; ">De :</label>
-                  <input type="text" name="commune1" style="margin-right:10px"class="form-control">
+               <label class="form-label" for="commune1" style="font-size:smaller;">De :</label>
+                  <select name="commune1" class="form-select">
+                     <option value="">Sélectionner une commune</option>
+                     <?php
+                     
+                     $query = $pdo->query("SELECT * FROM commune ORDER BY comNom");
+                     while ($commune = $query->fetch()) {
+                           echo '<option value="'.$commune['comId'].'">'.$commune['comNom']. ' ('.$commune['comCp'].')'.'</option>';
+                     }
+                     ?>
+                  </select>
                </div>
                      
                <div class="form-outline mb-4">
                   <label class="form-label" for="commune2" style="font-size:smaller; ">A :</label>
-                  <input type="text" name="commune2" style="margin-right:10px"class="form-control">
+                  <select name="commune2" class="form-select">
+                     <option value="">Sélectionner une commune</option>
+                     <?php
+                     
+                     $query = $pdo->query("SELECT * FROM commune ORDER BY comNom");
+                     while ($commune = $query->fetch()) {
+                           echo '<option value="'.$commune['comId'].'">'.$commune['comNom']. ' ('.$commune['comCp'].')'.'</option>';
+                     }
+                     ?>
+                  </select>
                </div>
 
                <div class="form-outline mb-4">
@@ -122,5 +140,5 @@
 
       
 	
-<?php include('footer.php'); ?>
+<?php //include('footer.php'); ?>
        
