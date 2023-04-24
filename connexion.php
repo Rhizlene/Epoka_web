@@ -1,10 +1,6 @@
 <?php
 
-$host = 'localhost';
-$dbname = 'epoka_mission';
-$username = 'root';
-$password = 'root';
-
+require("config.php");
 // Connexion à la base de données avec PDO
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);

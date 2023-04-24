@@ -6,10 +6,7 @@ if(!isset($_SESSION["id_salarie"])){
   exit(); 
 }
 
-$host = 'localhost';
-$dbname = 'epoka_mission';
-$username = 'root';
-$password = 'root';
+require("config.php");
 $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
 
 $indemKm = $_POST['indemKm'];

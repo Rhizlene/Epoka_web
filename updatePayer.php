@@ -5,10 +5,7 @@
           exit(); 
         }
         
-        $host = 'localhost';
-        $dbname = 'epoka_mission';
-        $username = 'root';
-        $password = 'root';
+        require("config.php");
 		$pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
 		$stmt = $pdo->prepare("UPDATE mission SET payer = 1 WHERE id_mission = ".$_POST['payer'].";");
 		$stmt->execute();

@@ -28,10 +28,7 @@
       <h3 class="my-3">Paramétrage de l'application</h3>
 
       <?php
-      $host = 'localhost';
-      $dbname = 'epoka_mission';
-      $username = 'root';
-      $password = 'root';
+    require("config.php");
         
       // Connexion à la base de données avec PDO
       try {
